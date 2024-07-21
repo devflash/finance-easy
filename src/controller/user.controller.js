@@ -1,6 +1,12 @@
 import {ApiError} from '../ErrorHandling/CustomErrors.js'
 import {User} from '../models/User.model.js'
-export const userController = async (req, res, next) => {
+
+const generateToken = user => {
+    const accessToken = user.generateAccessToken()
+    return accessToken
+}
+
+export const registerUser = async (req, res, next) => {
     try {
         const {firstName, lastName, email, password} = req.body
         // check if firstName, lassName, email and password is present in req
@@ -34,7 +40,41 @@ export const userController = async (req, res, next) => {
         if (!user) {
             throw new ApiError('MongoDB failure', 'Failed to create new user', 500)
         }
-        res.send({firstName, lastName, email, password})
+        res.status(200).json({firstName, lastName, email, password})
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const loginUser = async (req, res, next) => {
+    try {
+        //get user email and password
+        const {email, password} = req.body
+        // check if email and password present
+        const requiredFields = {email, password}
+        for (const [field, value] of Object.entries(requiredFields)) {
+            if (!value) {
+                throw new ApiError('Field missing', `${field} is required`, 400)
+            }
+        }
+
+        //validate user
+        const user = await User.findOne({
+            email
+        })
+        const isPasswordValid = await user.isPasswordCorrect(password)
+        if (!isPasswordValid) {
+            throw new ApiError('Auth failed', 'Invalid email or password', 400)
+        }
+
+        //Generate access tocken
+        const accessToken = generateToken(user)
+
+        //send response
+        res.status(200).cookie('accessToken', accessToken, {httpOnly: true, secure: true}).json({
+            isLoggedIn: true,
+            accessToken
+        })
     } catch (error) {
         next(error)
     }
