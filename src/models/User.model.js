@@ -2,11 +2,13 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 const userSchema = new mongoose.Schema(
     {
-        userName: {
+        firstName: {
             type: String,
-            required: true,
-            unique: true,
-            index: true
+            required: true
+        },
+        lastName: {
+            type: String,
+            required: true
         },
         email: {
             type: String,
@@ -15,8 +17,7 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
-            unique: true
+            required: true
         },
         refreshToken: {
             type: String
