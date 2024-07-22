@@ -23,3 +23,26 @@ export const createIncome = async (req, res, next) => {
         next(error)
     }
 }
+
+export const getIncomeById = async (req, resp, next) => {
+    try {
+        const {incomeId} = req.params
+
+        validateMandatory({incomeId})
+
+        const income = await Income.findById(incomeId).select('-userId')
+
+        resp.status(200).json(income)
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const getIncomes = async (req, resp, next) => {
+    try {
+        const incomes = await Income.find({userId: req._id}).select('-userId')
+        resp.status(200).json(incomes)
+    } catch (error) {
+        next(error)
+    }
+}
