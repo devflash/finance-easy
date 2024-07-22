@@ -79,3 +79,13 @@ export const loginUser = async (req, res, next) => {
         next(error)
     }
 }
+
+export const logout = async (req, res, next) => {
+    try {
+        res.status(200).clearCookie('accessToken').json({
+            isLoggedIn: false
+        })
+    } catch (err) {
+        next(err)
+    }
+}

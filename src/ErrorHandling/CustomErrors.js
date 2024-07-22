@@ -4,6 +4,7 @@ export class BaseError extends Error {
         Object.setPrototypeOf(this, new.target.prototype)
         this.name = name
         this.statusCode = statusCode
+        this.message = description
         Error.captureStackTrace(this)
     }
 }
