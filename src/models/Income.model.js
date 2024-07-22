@@ -13,6 +13,20 @@ const incomeSchema = new mongoose.Schema(
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
+        },
+        incomeDate: {
+            type: Date,
+            required: true
+        },
+        depositType: {
+            type: String, // bank deposit | cash
+            required: true
+        },
+        description: {
+            type: String
+        },
+        category: {
+            type: String
         }
     },
     {timestamps: true}

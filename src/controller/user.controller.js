@@ -1,5 +1,6 @@
 import {ApiError} from '../ErrorHandling/CustomErrors.js'
 import {User} from '../models/User.model.js'
+import {validateMandatory} from '../utils/util.js'
 
 const generateToken = user => {
     const accessToken = user.generateAccessToken()
@@ -12,11 +13,7 @@ export const registerUser = async (req, res, next) => {
         // check if firstName, lassName, email and password is present in req
         const requiredFields = {firstName, lastName, email, password}
 
-        for (const [field, value] of Object.entries(requiredFields)) {
-            if (!value) {
-                throw new ApiError('Field missing', `${field} is required`, 400)
-            }
-        }
+        validateMandatory(requiredFields)
 
         // validate email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -52,11 +49,8 @@ export const loginUser = async (req, res, next) => {
         const {email, password} = req.body
         // check if email and password present
         const requiredFields = {email, password}
-        for (const [field, value] of Object.entries(requiredFields)) {
-            if (!value) {
-                throw new ApiError('Field missing', `${field} is required`, 400)
-            }
-        }
+
+        validateMandatory(requiredFields)
 
         //validate user
         const user = await User.findOne({
