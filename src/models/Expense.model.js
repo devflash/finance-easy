@@ -6,13 +6,24 @@ const expenseSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        expenseName: {
+        moneyPaidTo: {
+            type: String,
+            required: true
+        },
+        paymentMethod: {
             type: String,
             required: true
         },
         amount: {
             type: Number,
             required: true
+        },
+        expenseDate: {
+            type: Date,
+            required: true
+        },
+        description: {
+            type: String
         },
         userId: {
             type: mongoose.Schema.Types.ObjectId,
