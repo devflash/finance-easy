@@ -40,7 +40,11 @@ export const getIncomeById = async (req, resp, next) => {
 
 export const getIncomes = async (req, resp, next) => {
     try {
-        const incomes = await Income.find({userId: req._id}).select('-userId')
+        let incomes = []
+        const userId = req._id
+        if (userId) {
+            incomes = await Income.find({userId}).select('-userId')
+        }
         resp.status(200).json(incomes)
     } catch (error) {
         next(error)

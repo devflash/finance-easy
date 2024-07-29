@@ -40,7 +40,11 @@ export const getExpenseById = async (req, resp, next) => {
 
 export const getExpenses = async (req, resp, next) => {
     try {
-        const expenses = await Expense.find({userId: req._id}).select('-userId')
+        let expenses = []
+        const userId = req._id
+        if (userId) {
+            expenses = await Expense.find({userId})
+        }
         resp.status(200).json(expenses)
     } catch (error) {
         next(error)
