@@ -1,4 +1,4 @@
-import {Router} from 'express'
+import {Router, Request, Response, NextFunction} from 'express'
 import {
     registerUser,
     loginUser,
@@ -9,6 +9,7 @@ import {
     updateBankAccount
 } from '../controller/user.controller.js'
 import {auth} from '../middlewares/auth.js'
+
 const router = Router()
 
 router.post('/register', registerUser)

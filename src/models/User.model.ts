@@ -1,8 +1,11 @@
-import mongoose from 'mongoose'
+import mongoose, {Model, Document, HydratedDocument} from 'mongoose'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import {IUser, IUserMethods} from '../utils/types.js'
 
-const userSchema = new mongoose.Schema(
+export type IUserModel = Model<IUser, {}, IUserMethods>
+
+const userSchema = new mongoose.Schema<IUser, IUserModel>(
     {
         firstName: {
             type: String,
@@ -44,7 +47,7 @@ userSchema.pre('save', async function (next) {
     next()
 })
 
-userSchema.methods.isPasswordCorrect = async function (password) {
+userSchema.methods.isPasswordCorrect = async function (password: string) {
     return await bcrypt.compare(password, this.password)
 }
 
@@ -53,8 +56,10 @@ userSchema.methods.generateAccessToken = function () {
         {
             _id: this._id
         },
-        process.env.ACCESS_TOKEN_KEY,
+        process.env.ACCESS_TOKEN_KEY!,
         {expiresIn: process.env.ACCESS_TOKEN_EXPIRY}
     )
 }
-export const User = new mongoose.model('User', userSchema)
+export type IUserDoc = HydratedDocument<IUser> & IUserMethods
+
+export const User = mongoose.model<IUser, IUserModel>('User', userSchema)

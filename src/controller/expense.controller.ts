@@ -1,6 +1,10 @@
+import {Request, Response, NextFunction} from 'express'
 import {Expense} from '../models/Expense.model.js'
 import {validateMandatory} from '../utils/util.js'
-export const createExpense = async (req, res, next) => {
+import {IExpense} from '../utils/types.js'
+import { ApiError } from '../ErrorHandling/CustomErrors.js'
+
+export const createExpense = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {category, moneyPaidTo, paymentMethod, amount, expenseDate, description} = req.body
 
@@ -24,7 +28,7 @@ export const createExpense = async (req, res, next) => {
     }
 }
 
-export const getExpenseById = async (req, resp, next) => {
+export const getExpenseById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {expenseId} = req.params
 
@@ -32,45 +36,52 @@ export const getExpenseById = async (req, resp, next) => {
 
         const expense = await Expense.findById(expenseId).select('-userId')
 
-        resp.status(200).json(expense)
+        res.status(200).json(expense)
     } catch (error) {
         next(error)
     }
 }
 
-export const getExpenses = async (req, resp, next) => {
+export const getExpenses = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        let expenses = []
+        let expenses: IExpense[] = []
         const userId = req._id
         if (userId) {
             expenses = await Expense.find({userId})
         }
-        resp.status(200).json(expenses)
+        res.status(200).json(expenses)
     } catch (error) {
         next(error)
     }
 }
 
-export const updateExpense = async (req, res, next) => {
+export const updateExpense = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {expenseId} = req.params
         const {category, moneyPaidTo, paymentMethod, amount, expenseDate, description} = req.body
 
         const requiredFields = {expenseId, category, moneyPaidTo, paymentMethod, amount, expenseDate}
         validateMandatory(requiredFields)
-        const expense = await Expense.updateOne(
+        const expense = await Expense.findByIdAndUpdate(
             {_id: expenseId},
             {expenseId, category, moneyPaidTo, paymentMethod, amount, expenseDate, description}
         )
+        
+        if(!expense){
+            throw new ApiError('Expense not found', 400)
+        }
 
-        const updatedExpense = await Expense.findById(expense._id).select('-userId')
+        let updatedExpense = null
+        
+        updatedExpense = await Expense.findById(expense._id).select('-userId')
+        
         res.status(200).json(updatedExpense)
     } catch (error) {
         next(error)
     }
 }
 
-export const deleteExpense = async (req, res, next) => {
+export const deleteExpense = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {expenseId} = req.params
 

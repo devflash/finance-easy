@@ -1,11 +1,12 @@
 {
-  "name": "FinanceEasy",
+  "name": "finance_easy",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "build": "tsc",
+    "start": "tsc && node dist/index.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -17,10 +18,16 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.7.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^22.0.0",
     "eslint": "9.x",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.8.0",
     "nodemon": "^3.1.4",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
   }
 }

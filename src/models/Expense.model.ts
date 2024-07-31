@@ -1,6 +1,9 @@
-import mongoose from 'mongoose'
+import mongoose, {Model} from 'mongoose'
+import {IExpense} from '../utils/types.js'
 
-const expenseSchema = new mongoose.Schema(
+type IExpenseModel = Model<IExpense>
+
+const expenseSchema = new mongoose.Schema<IExpense, IExpenseModel>(
     {
         category: {
             type: String,
@@ -33,4 +36,4 @@ const expenseSchema = new mongoose.Schema(
     {timestamps: true}
 )
 
-export const Expense = new mongoose.model('Expense', expenseSchema)
+export const Expense = mongoose.model<IExpense, IExpenseModel>('Expense', expenseSchema)

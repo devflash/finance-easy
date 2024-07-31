@@ -1,6 +1,9 @@
-import mongoose from 'mongoose'
+import mongoose, {Model} from 'mongoose'
+import {IIncome} from '../utils/types.js'
 
-const incomeSchema = new mongoose.Schema(
+type IncomeModel = Model<IIncome>
+
+const incomeSchema = new mongoose.Schema<IIncome, IncomeModel>(
     {
         source: {
             type: String,
@@ -32,4 +35,4 @@ const incomeSchema = new mongoose.Schema(
     {timestamps: true}
 )
 
-export const Income = new mongoose.model('Income', incomeSchema)
+export const Income = mongoose.model<IIncome, IncomeModel>('Income', incomeSchema)

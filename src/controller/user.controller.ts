@@ -1,14 +1,16 @@
-import {ApiError} from '../ErrorHandling/CustomErrors.js'
-import {User} from '../models/User.model.js'
+import {Request, Response, NextFunction} from 'express'
+import {ApiError, ValidationError} from '../ErrorHandling/CustomErrors.js'
+import {User, IUserDoc} from '../models/User.model.js'
 import {BankAccount} from '../models/BankAccount.model.js'
 import {validateMandatory} from '../utils/util.js'
+import { IBankAccount } from './../utils/types.js';
 
-const generateToken = user => {
+const generateToken = (user: IUserDoc) => {
     const accessToken = user.generateAccessToken()
     return accessToken
 }
 
-export const registerUser = async (req, res, next) => {
+export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {firstName, lastName, email, password} = req.body
         // check if firstName, lassName, email and password is present in req
@@ -19,24 +21,24 @@ export const registerUser = async (req, res, next) => {
         // validate email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email)) {
-            throw new ApiError('Invalid field', 'Email is not valid', 400)
+            throw new ValidationError('Email is not valid')
         }
 
         const passwordMinLength = 8
         if (password.length < passwordMinLength) {
-            throw new ApiError('Invalid field', `Password must be at least ${passwordMinLength} characters long`, 400)
+            throw new ValidationError(`Password must be at least ${passwordMinLength} characters long`)
         }
 
         // check if email address is present
         const userExist = await User.findOne({email})
         if (userExist) {
-            throw new ApiError('User Exist', `User with email is already registered`, 409)
+            throw new ApiError(`User with email is already registered`, 409)
         }
         // save in db
         const user = await User.create({firstName, lastName, email, password})
 
         if (!user) {
-            throw new ApiError('MongoDB failure', 'Failed to create new user', 500)
+            throw new ApiError('Failed to create new user', 500)
         }
         res.status(200).json({firstName, lastName, email, password})
     } catch (error) {
@@ -44,7 +46,7 @@ export const registerUser = async (req, res, next) => {
     }
 }
 
-export const loginUser = async (req, res, next) => {
+export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         //get user email and password
         const {email, password} = req.body
@@ -57,9 +59,15 @@ export const loginUser = async (req, res, next) => {
         const user = await User.findOne({
             email
         })
+
+        
+        if(!user){
+            throw new ApiError('User not found', 400)
+        }
+
         const isPasswordValid = await user.isPasswordCorrect(password)
         if (!isPasswordValid) {
-            throw new ApiError('Auth failed', 'Invalid email or password', 400)
+            throw new ValidationError('Invalid email or password')
         }
 
         //Generate access tocken
@@ -75,7 +83,7 @@ export const loginUser = async (req, res, next) => {
     }
 }
 
-export const logout = async (req, res, next) => {
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
     try {
         res.status(200).clearCookie('accessToken').json({
             isLoggedIn: false
@@ -85,7 +93,7 @@ export const logout = async (req, res, next) => {
     }
 }
 
-export const addBankAccount = async (req, res, next) => {
+export const addBankAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {bankName, accountNumber} = req.body
 
@@ -95,13 +103,11 @@ export const addBankAccount = async (req, res, next) => {
         const bankAccount = await BankAccount.create(body)
 
         if (!bankAccount._id) {
-            throw new ApiError('Bank account creation failure', 'Facing problem adding the bank account', 401)
+            throw new ApiError('Facing problem adding the bank account', 400)
         }
 
-        const user = await User.findById(req._id)
-        user.bankAccounts.push(bankAccount._id)
-        user.save()
-
+        await User.findByIdAndUpdate(req._id, {$push: {'bankAccounts': bankAccount._id}})
+    
         res.status(200).json({
             msg: 'Bank account is added'
         })
@@ -110,17 +116,16 @@ export const addBankAccount = async (req, res, next) => {
     }
 }
 
-export const getProfile = async (req, res, next) => {
+export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findById(req._id).populate('bankAccounts')
-
+        const user = await User.findById(req._id).populate<{bankAccounts: [IBankAccount]}>('bankAccounts')
         res.status(200).json(user)
     } catch (err) {
         next(err)
     }
 }
 
-export const updateProfile = async (req, res, next) => {
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {firstName, lastName, email, password} = req.body
         await User.updateOne({_id: req._id}, {firstName, lastName, email, password})
@@ -132,7 +137,7 @@ export const updateProfile = async (req, res, next) => {
     }
 }
 
-export const updateBankAccount = async (req, res, next) => {
+export const updateBankAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {_id, bankName, accountNumber} = req.body
         const body = {bankName, accountNumber}
