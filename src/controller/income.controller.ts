@@ -92,3 +92,24 @@ export const deleteIncome = async (req: Request, res: Response, next: NextFuncti
         next(error)
     }
 }
+
+export const searchIncomes = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+       const {source, category, startDate, endDate} = req.query
+       const userId = req._id
+       const searchQuery: object[] = [{userId}]
+       if(source){
+        searchQuery.push({source})
+       }
+       if(category){
+        searchQuery.push({category: {$in: [category]}})
+       }
+       if(startDate && endDate){
+        searchQuery.push({incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
+       }
+       const incomes = await Income.find({$and: searchQuery})
+       res.status(200).send(incomes)
+    } catch (error) {
+        next(error)
+    }
+}

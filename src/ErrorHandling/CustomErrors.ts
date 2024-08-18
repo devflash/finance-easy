@@ -6,7 +6,7 @@ export class BaseError extends Error implements ICustomError {
         super(message)
         this.name=name
         this.status=status
-        Object.setPrototypeOf(this, BaseError.prototype)
+        Object.setPrototypeOf(this, new.target.prototype)
     }
 }
 

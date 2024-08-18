@@ -1,9 +1,10 @@
-import {ApiError} from '../ErrorHandling/CustomErrors.js'
+import {ApiError, ValidationError} from '../ErrorHandling/CustomErrors.js'
 import {ICustomError} from '../utils/types.js'
-import {Response} from 'express'
+import {Response, NextFunction} from 'express'
 
-export const ErrorHandler = (err: Error | ICustomError, _: any , res:Response) => {
-    if (err instanceof ApiError) {
+export const ErrorHandler = (err: Error | ICustomError, _: any , res:Response, next: NextFunction) => {
+    if (err instanceof ApiError || err instanceof ValidationError) {
+        console.log("ApiError",err)
         return res.status(err.status).send({name: err.name, message: err.message, statusCode: err.status})
     }
     return res.status(500).send(err)
