@@ -2,7 +2,8 @@ import {Request, Response, NextFunction} from 'express'
 import {Income} from '../models/Income.model.js'
 import {validateMandatory} from '../utils/util.js'
 import { ApiError } from '../ErrorHandling/CustomErrors.js'
-
+import mongoose from 'mongoose'
+const {ObjectId} = mongoose.Types
 export const createIncome = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {source, amount, incomeDate, depositType, description, category} = req.body
@@ -95,20 +96,33 @@ export const deleteIncome = async (req: Request, res: Response, next: NextFuncti
 
 export const searchIncomes = async (req: Request, res: Response, next: NextFunction) => {
     try {
-       const {source, category, startDate, endDate} = req.query
-       const userId = req._id
-       const searchQuery: object[] = [{userId}]
-       if(source){
-        searchQuery.push({source})
+       const {source, category, startDate, endDate, page=1, limit=5} = req.query
+       const userId = new ObjectId(req._id)
+      
+       const searchQuery = {
+            userId,
+            ...(source && {source}),
+            ...(category && {category: {$in: [category]}}),
+            ...(startDate && endDate && {incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
        }
-       if(category){
-        searchQuery.push({category: {$in: [category]}})
-       }
-       if(startDate && endDate){
-        searchQuery.push({incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
-       }
-       const incomes = await Income.find({$and: searchQuery})
-       res.status(200).send(incomes)
+       const offset = (Number(page) - 1) * Number(limit)
+   
+       const pipeline = [
+        { $match: searchQuery },
+        {
+          $facet: {
+            paginatedResults: [
+              { $skip: offset },
+              { $limit: Number(limit) }
+            ],
+            totalCount: [
+              { $count: "count" }
+            ]
+          }
+        }
+      ];
+        const response = await Income.aggregate(pipeline)
+        res.status(200).send(response)
     } catch (error) {
         next(error)
     }
