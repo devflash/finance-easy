@@ -6,12 +6,12 @@ import {
     deleteExpense,
     updateExpense
 } from '../controller/expense.controller.js'
-// import {auth} from '../middlewares/auth.js'
+import {auth} from '../middlewares/auth.js'
 const router = Router()
 
-router.post('/create', createExpense)
-router.get('/all', getExpenses)
-router.get('/:expenseId', getExpenseById)
+router.post('/create', auth, createExpense)
+router.get('/all', auth, getExpenses)
+router.get('/:expenseId', auth, getExpenseById)
 router.put('/:expenseId', updateExpense)
 router.delete('/:expenseId', deleteExpense)
 

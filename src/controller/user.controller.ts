@@ -150,3 +150,4 @@ export const updateBankAccount = async (req: Request, res: Response, next: NextF
         next(err)
     }
 }
+

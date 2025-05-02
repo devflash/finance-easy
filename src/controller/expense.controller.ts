@@ -46,6 +46,7 @@ export const getExpenses = async (req: Request, res: Response, next: NextFunctio
     try {
         let expenses: IExpense[] = []
         const userId = req._id
+        console.log(userId)
         if (userId) {
             expenses = await Expense.find({userId})
         }

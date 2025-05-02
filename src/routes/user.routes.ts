@@ -6,8 +6,9 @@ import {
     addBankAccount,
     getProfile,
     updateProfile,
-    updateBankAccount
+    updateBankAccount,
 } from '../controller/user.controller.js'
+import {dashboard} from '../controller/dashboard.controller.js'
 import {auth} from '../middlewares/auth.js'
 
 const router = Router()
@@ -20,5 +21,7 @@ router.post('/create-bank-account', auth, addBankAccount)
 router.put('/update-bank-account', auth, updateBankAccount)
 router.get('/profile', auth, getProfile)
 router.put('/update', auth, updateProfile)
+
+router.get('/dashboard', auth, dashboard)
 
 export default router
