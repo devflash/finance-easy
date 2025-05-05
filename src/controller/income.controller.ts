@@ -2,8 +2,64 @@ import {Request, Response, NextFunction} from 'express'
 import {Income} from '../models/Income.model.js'
 import {validateMandatory} from '../utils/util.js'
 import { ApiError } from '../ErrorHandling/CustomErrors.js'
-import mongoose from 'mongoose'
+import mongoose, {PipelineStage} from 'mongoose'
 const {ObjectId} = mongoose.Types
+
+const amountByCategoryPipeline: PipelineStage[] = [{
+        $group: {
+            _id: "$category",
+            value: {
+                $sum: "$amount"
+            }
+        }
+    },{
+        $project: {
+            _id: 0,
+            name: '$_id',
+            value: 1
+        }
+    }]
+
+    const amountByMonth = [
+        {
+            $match: {
+                incomeDate: 
+                        {
+                                $gte: new Date("01/01/2024"),
+                                $lt: new Date("01/03/2025"),
+                        }
+                }
+        },
+        {
+            $project: {
+                month: {
+                    $month: '$incomeDate'
+                },
+                amount: 1,
+                incomeDate: 1
+            }
+        },
+        {
+            $group: {
+                _id: '$month',
+                value: {$sum: '$amount'},
+                incomeDate: {$first: '$incomeDate'}
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                name: {
+                    $dateToString: {
+                        format: "%b",
+                        date:'$incomeDate'
+                      }
+                },
+                value: 1
+            }
+        }
+    ]
+
 export const createIncome = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {source, amount, incomeDate, depositType, description, category} = req.body
@@ -124,6 +180,30 @@ export const searchIncomes = async (req: Request, res: Response, next: NextFunct
         const response = await Income.aggregate(pipeline)
         res.status(200).send(response)
     } catch (error) {
+        next(error)
+    }
+}
+
+export const getIncomeGraph = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const {startDate, endDate} = req.body;
+        const userId = new ObjectId(req._id)
+         const incomeData = await Income.aggregate([
+            {
+                $match: {userId }
+            },{
+                $facet: {
+                    'incomeByCategory': amountByCategoryPipeline as any,
+                    'incomeByMonths': amountByMonth as any,
+                }
+            }])
+        
+        res.status(200).json({
+            incomeByCategory: incomeData[0].incomeByCategory,
+            incomeByMonths: incomeData[0].incomeByMonths,
+        })
+    }
+    catch(error){
         next(error)
     }
 }
