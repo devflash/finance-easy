@@ -178,7 +178,10 @@ export const searchIncomes = async (req: Request, res: Response, next: NextFunct
         }
       ];
         const response = await Income.aggregate(pipeline)
-        res.status(200).send(response)
+        res.status(200).send({
+            incomes: response[0].paginatedResults,
+            count: response[0].totalCount[0].count
+        })
     } catch (error) {
         next(error)
     }

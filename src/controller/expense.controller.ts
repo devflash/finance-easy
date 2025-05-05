@@ -185,7 +185,10 @@ export const searchExpenses = async (req: Request, res: Response, next: NextFunc
            }
          ];
            const response = await Expense.aggregate(pipeline)
-           res.status(200).send(response)
+           res.status(200).send({
+            expenses: response[0].paginatedResults,
+            count: response[0].totalCount[0].count
+           })
        } catch (error) {
            next(error)
        }
