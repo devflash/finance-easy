@@ -5,15 +5,18 @@ import {
     getExpenses,
     deleteExpense,
     updateExpense,
-    getExpenseGraph
+    getExpenseGraph,
+    searchExpenses
 } from '../controller/expense.controller.js'
 import {auth} from '../middlewares/auth.js'
 const router = Router()
 
 router.post('/create', auth, createExpense)
 router.get('/all', auth, getExpenses)
+router.get('/graph', auth, getExpenseGraph)
+router.get('/search', auth, searchExpenses)
 router.get('/:expenseId', auth, getExpenseById)
 router.put('/:expenseId', updateExpense)
 router.delete('/:expenseId', deleteExpense)
-router.get('/graph', auth, getExpenseGraph)
+
 export default router

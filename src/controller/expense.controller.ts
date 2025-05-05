@@ -157,6 +157,40 @@ export const deleteExpense = async (req: Request, res: Response, next: NextFunct
     }
 }
 
+export const searchExpenses = async (req: Request, res: Response, next: NextFunction) => {
+   try {
+          const {moneyPaidTo, category, startDate, endDate, page=1, limit=5} = req.query
+          const userId = new ObjectId(req._id)
+         
+          const searchQuery = {
+               userId,
+               ...(moneyPaidTo && {moneyPaidTo}),
+               ...(category && {category: {$in: [category]}}),
+               ...(startDate && endDate && {incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
+          }
+          const offset = (Number(page) - 1) * Number(limit)
+      
+          const pipeline = [
+           { $match: searchQuery },
+           {
+             $facet: {
+               paginatedResults: [
+                 { $skip: offset },
+                 { $limit: Number(limit) }
+               ],
+               totalCount: [
+                 { $count: "count" }
+               ]
+             }
+           }
+         ];
+           const response = await Expense.aggregate(pipeline)
+           res.status(200).send(response)
+       } catch (error) {
+           next(error)
+       }
+}
+
 export const getExpenseGraph = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const {startDate, endDate} = req.body;
@@ -180,3 +214,4 @@ export const getExpenseGraph = async (req: Request, res: Response, next: NextFun
         next(error)
     }
 }
+
