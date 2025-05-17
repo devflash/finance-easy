@@ -4,9 +4,13 @@ import cookieParser from 'cookie-parser'
 import userRouter from './routes/user.routes.js'
 import incomeRouter from './routes/income.routes.js'
 import expenseRouter from './routes/expense.route.js'
+import cors from 'cors';
 
 export const app = express()
 
+app.use(cors({
+    origin: 'http://localhost:5173'
+}))
 app.use(express.json())
 app.use(cookieParser())
 
