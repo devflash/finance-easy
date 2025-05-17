@@ -49,3 +49,14 @@ export interface IExpense extends Document {
 export interface ICustomError extends Error {
     status: number
 }
+
+
+export interface ISaving extends Document {
+    userId: Types.ObjectId,
+    date: Date,
+    amount: number,
+    type: string,
+    description: string
+    createdAt: Date;
+    updateAt: Date;
+}

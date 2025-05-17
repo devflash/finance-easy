@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import userRouter from './routes/user.routes.js'
 import incomeRouter from './routes/income.routes.js'
 import expenseRouter from './routes/expense.route.js'
+import savingRouter from './routes/saving.route.js'
 import cors from 'cors';
 
 export const app = express()
@@ -18,5 +19,5 @@ app.use(cookieParser())
 app.use('/api/v1/user', userRouter)
 app.use('/api/v1/income', incomeRouter)
 app.use('/api/v1/expense', expenseRouter)
-
+app.use('/api/v1/saving', savingRouter)
 app.use(ErrorHandler)
