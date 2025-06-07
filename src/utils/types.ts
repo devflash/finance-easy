@@ -55,7 +55,7 @@ export interface ISaving extends Document {
     userId: Types.ObjectId,
     date: Date,
     amount: number,
-    type: string,
+    investmentType: string,
     description: string
     createdAt: Date;
     updateAt: Date;

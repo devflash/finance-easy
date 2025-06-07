@@ -21,7 +21,7 @@ const savingSchema = new mongoose.Schema<ISaving, ISavingModel>(
         description: {
             type: String
         },
-        type: {
+        investmentType: {
             type: String
         }
     },
