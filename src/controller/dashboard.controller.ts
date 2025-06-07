@@ -96,6 +96,88 @@ const incomeVsExpensePipeline: PipelineStage[] = [{
       }
 }]
 
+const savingsVsExpensePipeline: PipelineStage[] = [{
+    $match: {$or: [
+        {
+          type: "Savings",
+          date: {
+            $gte: new Date("01/01/2024"),
+            $lt: new Date("01/03/2025"),
+          },
+        },
+        {
+          type: "Expense",
+          expenseDate: {
+            $gte: new Date("01/01/2024"),
+            $lt: new Date("01/03/2025"),
+          },
+        },
+      ]}
+},{
+    $project: {
+        month: {
+          $cond: {
+            if: {
+              $eq: ["$type", "Savings"],
+            },
+            then: {
+              $month: "$date",
+            },
+            else: {
+              $month: "$expenseDate",
+            },
+          },
+        },
+        sv: {
+          $cond: {
+            if: {
+              $eq: ["$type", "Savings"],
+            },
+            then: "$amount",
+            else: {
+              $literal: 0,
+            },
+          },
+        },
+        ev: {
+          $cond: {
+            if: {
+              $eq: ["$type", "Expense"],
+            },
+            then: "$amount",
+            else: {
+              $literal: 0,
+            },
+          },
+        },
+        name: {
+          $dateToString: {
+            format: "%b",
+            date: {
+              $ifNull: ["$date", "$expenseDate"],
+            },
+          },
+        },
+      }
+},{
+    $group: {
+        _id: "$month",
+        sv: {
+          $sum: "$sv",
+        },
+        ev: {
+          $sum: "$ev",
+        },
+        name: {
+          $first: "$name",
+        },
+      }
+},{
+    $sort: {
+        _id: 1,
+      }
+}]
+
 
 
 export const dashboard = async (req: Request, res: Response, next: NextFunction) => {
@@ -103,7 +185,7 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
         const {startDate, endDate} = req.body;
         const userId = new ObjectId(req._id)
         console.log(userId)
-        const incomeData = await Income.aggregate([
+        const dashboardData = await Income.aggregate([
             {
               $match: {
                   userId
@@ -140,17 +222,41 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
                 },
             },
             {
+              $unionWith: {
+                  coll: "savings",
+                  pipeline: [
+                    {
+                      $match: {
+                        userId
+                      },
+                    },
+                    {
+                      $project: {
+                        investmentType: 1,
+                        amount: 1,
+                        type: {
+                          $literal: "Savings",
+                        },
+                        date: 1
+                      },
+                    },
+                  ],
+                }
+            },
+            {
               $facet: {
                 'total': totalAmountPipeline as any,
-                'incomeVsExpense': incomeVsExpensePipeline as any
+                'incomeVsExpense': incomeVsExpensePipeline as any,
+                'savingsVsExpense': savingsVsExpensePipeline as any
             }
             },
           ])
        
 
         res.status(200).json({
-            total: incomeData[0].total,
-            incomesVsExpenses: incomeData[0].incomeVsExpense
+            total: dashboardData[0].total,
+            incomesVsExpenses: dashboardData[0].incomeVsExpense,
+            savingsVsExpense: dashboardData[0].savingsVsExpense
         })
     }catch(err){
         next(err)
