@@ -178,7 +178,34 @@ const savingsVsExpensePipeline: PipelineStage[] = [{
       }
 }]
 
-
+const topSpendingsPipeline: PipelineStage[] = [
+  {
+    $match:
+      {
+        expenseDate: {
+          $gte: new Date("01/01/2024"),
+          $lt: new Date("01/03/2025"),
+        },
+      },
+  },
+  {
+    $project:
+      {
+        amount: 1,
+        moneyPaidTo: 1,
+        expenseDate: 1,
+      },
+  },
+  {
+    $sort:
+      {
+        amount: -1,
+      },
+  },
+  {
+    $limit: 5
+  },
+]
 
 export const dashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -247,7 +274,8 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
               $facet: {
                 'total': totalAmountPipeline as any,
                 'incomeVsExpense': incomeVsExpensePipeline as any,
-                'savingsVsExpense': savingsVsExpensePipeline as any
+                'savingsVsExpense': savingsVsExpensePipeline as any,
+                'topSpendings': topSpendingsPipeline as any
             }
             },
           ])
@@ -256,7 +284,8 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
         res.status(200).json({
             total: dashboardData[0].total,
             incomesVsExpenses: dashboardData[0].incomeVsExpense,
-            savingsVsExpense: dashboardData[0].savingsVsExpense
+            savingsVsExpense: dashboardData[0].savingsVsExpense,
+            topSpendings: dashboardData[0].topSpendings
         })
     }catch(err){
         next(err)
