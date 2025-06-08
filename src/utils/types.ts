@@ -26,12 +26,13 @@ export interface IIncome extends Document {
     source: string,
     amount: number,
     userId: Types.ObjectId,
-    incomeDate: Date,
+    date: Date,
     depositType: string, // bank deposit | cash
     description:  string,
     category:  string,
     createdAt: Date;
     updateAt: Date;
+    type: "Income"
 }
 
 export interface IExpense extends Document {
@@ -39,11 +40,12 @@ export interface IExpense extends Document {
     moneyPaidTo: string,
     paymentMethod: string,
     amount: number,
-    expenseDate: Date,
+    date: Date,
     description: string,
     userId: Types.ObjectId,
     createdAt: Date;
     updateAt: Date;
+    type: 'Expense'
 }
 
 export interface ICustomError extends Error {
@@ -59,4 +61,5 @@ export interface ISaving extends Document {
     description: string
     createdAt: Date;
     updateAt: Date;
+    type: "Saving"
 }

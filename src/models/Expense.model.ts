@@ -21,7 +21,7 @@ const expenseSchema = new mongoose.Schema<IExpense, IExpenseModel>(
             type: Number,
             required: true
         },
-        expenseDate: {
+        date: {
             type: Date,
             required: true
         },
@@ -31,6 +31,10 @@ const expenseSchema = new mongoose.Schema<IExpense, IExpenseModel>(
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
+        },
+        type: {
+            type: String,
+            default: 'Expense'
         }
     },
     {timestamps: true}

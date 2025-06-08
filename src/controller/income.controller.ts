@@ -23,27 +23,27 @@ const amountByCategoryPipeline: PipelineStage[] = [{
     const amountByMonth = [
         {
             $match: {
-                incomeDate: 
-                        {
-                                $gte: new Date("01/01/2024"),
-                                $lt: new Date("01/03/2025"),
-                        }
+                date: 
+                    {
+                            $gte: new Date("01/01/2024"),
+                            $lt: new Date("01/03/2025"),
+                    }
                 }
         },
         {
             $project: {
                 month: {
-                    $month: '$incomeDate'
+                    $month: '$date'
                 },
                 amount: 1,
-                incomeDate: 1
+                date: 1
             }
         },
         {
             $group: {
                 _id: '$month',
                 value: {$sum: '$amount'},
-                incomeDate: {$first: '$incomeDate'}
+                date: {$first: '$date'}
             }
         },
         {
@@ -52,7 +52,7 @@ const amountByCategoryPipeline: PipelineStage[] = [{
                 name: {
                     $dateToString: {
                         format: "%b",
-                        date:'$incomeDate'
+                        date:'$date'
                       }
                 },
                 value: 1
@@ -62,15 +62,15 @@ const amountByCategoryPipeline: PipelineStage[] = [{
 
 export const createIncome = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {source, amount, incomeDate, depositType, description, category} = req.body
+        const {source, amount, date, depositType, description, category} = req.body
 
-        const requiredFields = {source, amount, incomeDate, depositType}
+        const requiredFields = {source, amount, date, depositType}
         validateMandatory(requiredFields)
 
         const income = await Income.create({
             source,
             amount,
-            incomeDate,
+            date,
             depositType,
             description,
             category,
@@ -113,13 +113,13 @@ export const getIncomes = async (req: Request, res: Response, next: NextFunction
 export const updateIncome = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {incomeId} = req.params
-        const {source, amount, incomeDate, depositType, description, category} = req.body
+        const {source, amount, date, depositType, description, category} = req.body
 
-        const requiredFields = {incomeId, source, amount, incomeDate, depositType, description, category}
+        const requiredFields = {incomeId, source, amount, date, depositType, description, category}
         validateMandatory(requiredFields)
         const income = await Income.findOneAndUpdate(
             {_id: incomeId},
-            {incomeId, source, amount, incomeDate, depositType, description, category}
+            {incomeId, source, amount, date, depositType, description, category}
         )
 
         if(!income){
@@ -159,7 +159,7 @@ export const searchIncomes = async (req: Request, res: Response, next: NextFunct
             userId,
             ...(source && {source}),
             ...(category && {category: {$in: [category]}}),
-            ...(startDate && endDate && {incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
+            ...(startDate && endDate && {date: {$and: [{$gte: startDate}, {$lte: endDate}]}})
        }
        const offset = (Number(page) - 1) * Number(limit)
    

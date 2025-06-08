@@ -25,7 +25,7 @@ const amountByCategoryPipeline: PipelineStage[] = [{
         {
             $match: 
             {
-                expenseDate: 
+                date: 
                     {
                         $gte: new Date("01/01/2024"),
                         $lt: new Date("01/03/2025"),
@@ -35,17 +35,17 @@ const amountByCategoryPipeline: PipelineStage[] = [{
         {
             $project: {
                 month: {
-                    $month: '$expenseDate'
+                    $month: '$date'
                 },
                 amount: 1,
-                expenseDate: 1
+                date: 1
             }
         },
         {
             $group: {
                 _id: '$month',
                 value: {$sum: '$amount'},
-                expenseDate: {$first: '$expenseDate'}
+                date: {$first: '$date'}
             }
         },
         {
@@ -54,7 +54,7 @@ const amountByCategoryPipeline: PipelineStage[] = [{
                 name: {
                     $dateToString: {
                         format: "%b",
-                        date:'$expenseDate'
+                        date:'$date'
                       }
                 },
                 value: 1
@@ -64,9 +64,9 @@ const amountByCategoryPipeline: PipelineStage[] = [{
 
 export const createExpense = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {category, moneyPaidTo, paymentMethod, amount, expenseDate, description} = req.body
+        const {category, moneyPaidTo, paymentMethod, amount, date, description} = req.body
 
-        const requiredFields = {category, moneyPaidTo, paymentMethod, amount, expenseDate, description}
+        const requiredFields = {category, moneyPaidTo, paymentMethod, amount, date, description}
         validateMandatory(requiredFields)
 
         const expense = await Expense.create({
@@ -74,7 +74,7 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
             amount,
             moneyPaidTo,
             paymentMethod,
-            expenseDate,
+            date,
             description,
             userId: req._id
         })
@@ -117,13 +117,13 @@ export const getExpenses = async (req: Request, res: Response, next: NextFunctio
 export const updateExpense = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {expenseId} = req.params
-        const {category, moneyPaidTo, paymentMethod, amount, expenseDate, description} = req.body
+        const {category, moneyPaidTo, paymentMethod, amount, date, description} = req.body
 
-        const requiredFields = {expenseId, category, moneyPaidTo, paymentMethod, amount, expenseDate}
+        const requiredFields = {expenseId, category, moneyPaidTo, paymentMethod, amount, date}
         validateMandatory(requiredFields)
         const expense = await Expense.findByIdAndUpdate(
             {_id: expenseId},
-            {expenseId, category, moneyPaidTo, paymentMethod, amount, expenseDate, description}
+            {expenseId, category, moneyPaidTo, paymentMethod, amount, date, description}
         )
         
         if(!expense){

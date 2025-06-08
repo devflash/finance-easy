@@ -207,6 +207,107 @@ const topSpendingsPipeline: PipelineStage[] = [
   },
 ]
 
+const networthPipeline: PipelineStage[]=[
+  {
+    $match: {
+      $or: [
+          {
+            type: "Income",
+            incomeDaye: {
+              $gte: new Date("01/01/2024"),
+              $lt: new Date("01/03/2025"),
+            },
+          },
+          {
+            type: "Savings",
+            date: {
+              $gte: new Date("01/01/2024"),
+              $lt: new Date("01/03/2025"),
+            },
+          },
+          {
+            type: "Expense",
+            expenseDate: {
+              $gte: new Date("01/01/2024"),
+              $lt: new Date("01/03/2025"),
+            },
+          },
+        ]
+    }
+    
+  },
+  {
+    $project:
+      {
+        month: {
+          $cond: {
+            if: {
+              $eq: ["$type", "Income"],
+            },
+            then: {
+              $month: "$incomeDate",
+            },
+            else: {
+              if: {
+                $eq: ["$type", "Expense"],
+              },
+              then: {
+                $month: "$expenseDate",
+              },
+              else: {
+                $month: "$date",
+              },
+            },
+          },
+        },
+        amount: 1,
+        type: 1,
+      },
+      
+  },
+  {
+    $group:
+      {
+        _id: "$month",
+        totalIncome: {
+          $sum: {
+            $cond: {
+              if: {
+                $eq: ["$type", "Income"],
+              },
+              then: "$amount",
+              else: 0,
+            },
+          },
+        },
+        totalExpense: {
+          $sum: {
+            $cond: {
+              if: {
+                $eq: ["$type", "Expense"],
+              },
+              then: "$amount",
+              else: 0,
+            },
+          },
+        },
+        totalSaving: {
+          $sum: {
+            $cond: {
+              if: {
+                $eq: ["$type", "Savings"],
+              },
+              then: "$amount",
+              else: 0,
+            },
+          },
+        },
+      },
+  },
+
+
+]
+
 export const dashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {startDate, endDate} = req.body;

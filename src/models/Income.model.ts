@@ -17,7 +17,7 @@ const incomeSchema = new mongoose.Schema<IIncome, IncomeModel>(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         },
-        incomeDate: {
+        date: {
             type: Date,
             required: true
         },
@@ -30,6 +30,10 @@ const incomeSchema = new mongoose.Schema<IIncome, IncomeModel>(
         },
         category: {
             type: String
+        },
+        type: {
+            type: String,
+            default: "Income"
         }
     },
     {timestamps: true}

@@ -23,6 +23,10 @@ const savingSchema = new mongoose.Schema<ISaving, ISavingModel>(
         },
         investmentType: {
             type: String
+        },
+        type: {
+            type: String,
+            default: 'Saving'
         }
     },
     {timestamps: true}
