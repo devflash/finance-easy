@@ -15,36 +15,16 @@ const totalAmountPipeline: PipelineStage[] = [{
 ]
 
 const incomeVsExpensePipeline: PipelineStage[] = [{
-    $match: {$or: [
-        {
-          type: "Income",
-          incomeDate: {
+    $match: {
+        date: {
             $gte: new Date("01/01/2024"),
             $lt: new Date("01/03/2025"),
-          },
-        },
-        {
-          type: "Expense",
-          expenseDate: {
-            $gte: new Date("01/01/2024"),
-            $lt: new Date("01/03/2025"),
-          },
-        },
-      ]}
+          }
+      }
 },{
     $project: {
         month: {
-          $cond: {
-            if: {
-              $eq: ["$type", "Income"],
-            },
-            then: {
-              $month: "$incomeDate",
-            },
-            else: {
-              $month: "$expenseDate",
-            },
-          },
+         $month: "$date"
         },
         iv: {
           $cond: {
@@ -71,9 +51,7 @@ const incomeVsExpensePipeline: PipelineStage[] = [{
         name: {
           $dateToString: {
             format: "%b",
-            date: {
-              $ifNull: ["$incomeDate", "$expenseDate"],
-            },
+            date: "$date"
           },
         },
       }
@@ -97,41 +75,21 @@ const incomeVsExpensePipeline: PipelineStage[] = [{
 }]
 
 const savingsVsExpensePipeline: PipelineStage[] = [{
-    $match: {$or: [
-        {
-          type: "Savings",
-          date: {
-            $gte: new Date("01/01/2024"),
-            $lt: new Date("01/03/2025"),
-          },
-        },
-        {
-          type: "Expense",
-          expenseDate: {
-            $gte: new Date("01/01/2024"),
-            $lt: new Date("01/03/2025"),
-          },
-        },
-      ]}
+    $match: {
+      date: {
+        $gte: new Date("01/01/2024"),
+        $lt: new Date("01/03/2025"),
+      },
+    }
 },{
     $project: {
         month: {
-          $cond: {
-            if: {
-              $eq: ["$type", "Savings"],
-            },
-            then: {
-              $month: "$date",
-            },
-            else: {
-              $month: "$expenseDate",
-            },
-          },
+          $month: "$date"
         },
         sv: {
           $cond: {
             if: {
-              $eq: ["$type", "Savings"],
+              $eq: ["$type", "Saving"],
             },
             then: "$amount",
             else: {
@@ -153,9 +111,7 @@ const savingsVsExpensePipeline: PipelineStage[] = [{
         name: {
           $dateToString: {
             format: "%b",
-            date: {
-              $ifNull: ["$date", "$expenseDate"],
-            },
+            date: "$date"
           },
         },
       }
@@ -182,7 +138,7 @@ const topSpendingsPipeline: PipelineStage[] = [
   {
     $match:
       {
-        expenseDate: {
+        date: {
           $gte: new Date("01/01/2024"),
           $lt: new Date("01/03/2025"),
         },
@@ -193,7 +149,7 @@ const topSpendingsPipeline: PipelineStage[] = [
       {
         amount: 1,
         moneyPaidTo: 1,
-        expenseDate: 1,
+        date: 1,
       },
   },
   {
@@ -207,107 +163,6 @@ const topSpendingsPipeline: PipelineStage[] = [
   },
 ]
 
-const networthPipeline: PipelineStage[]=[
-  {
-    $match: {
-      $or: [
-          {
-            type: "Income",
-            incomeDaye: {
-              $gte: new Date("01/01/2024"),
-              $lt: new Date("01/03/2025"),
-            },
-          },
-          {
-            type: "Savings",
-            date: {
-              $gte: new Date("01/01/2024"),
-              $lt: new Date("01/03/2025"),
-            },
-          },
-          {
-            type: "Expense",
-            expenseDate: {
-              $gte: new Date("01/01/2024"),
-              $lt: new Date("01/03/2025"),
-            },
-          },
-        ]
-    }
-    
-  },
-  {
-    $project:
-      {
-        month: {
-          $cond: {
-            if: {
-              $eq: ["$type", "Income"],
-            },
-            then: {
-              $month: "$incomeDate",
-            },
-            else: {
-              if: {
-                $eq: ["$type", "Expense"],
-              },
-              then: {
-                $month: "$expenseDate",
-              },
-              else: {
-                $month: "$date",
-              },
-            },
-          },
-        },
-        amount: 1,
-        type: 1,
-      },
-      
-  },
-  {
-    $group:
-      {
-        _id: "$month",
-        totalIncome: {
-          $sum: {
-            $cond: {
-              if: {
-                $eq: ["$type", "Income"],
-              },
-              then: "$amount",
-              else: 0,
-            },
-          },
-        },
-        totalExpense: {
-          $sum: {
-            $cond: {
-              if: {
-                $eq: ["$type", "Expense"],
-              },
-              then: "$amount",
-              else: 0,
-            },
-          },
-        },
-        totalSaving: {
-          $sum: {
-            $cond: {
-              if: {
-                $eq: ["$type", "Savings"],
-              },
-              then: "$amount",
-              else: 0,
-            },
-          },
-        },
-      },
-  },
-
-
-]
-
 export const dashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {startDate, endDate} = req.body;
@@ -317,15 +172,7 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
             {
               $match: {
                   userId
-                },
-            },
-            {
-              $project: {
-                  category: 1,
-                  amount: 1,
-                  type: "Income",
-                  incomeDate: 1
-                },
+                }
             },
             {
               $unionWith: {
@@ -334,20 +181,10 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
                     {
                       $match: {
                         userId
-                      },
-                    },
-                    {
-                      $project: {
-                        category: 1,
-                        amount: 1,
-                        type: {
-                          $literal: "Expense",
-                        },
-                        expenseDate: 1
-                      },
-                    },
-                  ],
-                },
+                      }
+                    }
+                  ]
+                }
             },
             {
               $unionWith: {
@@ -356,19 +193,9 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
                     {
                       $match: {
                         userId
-                      },
-                    },
-                    {
-                      $project: {
-                        investmentType: 1,
-                        amount: 1,
-                        type: {
-                          $literal: "Savings",
-                        },
-                        date: 1
-                      },
-                    },
-                  ],
+                      }
+                    }
+                  ]
                 }
             },
             {
@@ -381,12 +208,21 @@ export const dashboard = async (req: Request, res: Response, next: NextFunction)
             },
           ])
        
+        const networth = dashboardData[0].incomeVsExpense.map((data: any)=>{
+          const {_id, name} = data
+          return {
+            _id,
+            name,
+            nw: data.iv - data.ev
+          }
 
+        })
         res.status(200).json({
             total: dashboardData[0].total,
             incomesVsExpenses: dashboardData[0].incomeVsExpense,
             savingsVsExpense: dashboardData[0].savingsVsExpense,
-            topSpendings: dashboardData[0].topSpendings
+            topSpendings: dashboardData[0].topSpendings,
+            networth
         })
     }catch(err){
         next(err)
