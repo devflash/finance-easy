@@ -6,7 +6,6 @@ export interface IUser{
     email: string,
     password: string,
     phoneNumber: string,
-    bankAccounts: Types.ObjectId[],
     refreshToken: string,
     createdAt: Date;
     updateAt: Date;
@@ -18,8 +17,11 @@ export interface IUserMethods {
 }
 
 export interface IBankAccount{
-    bankName: string,
-    accountNumber: string
+    userId: Types.ObjectId
+    bankName: string;
+    accountNumber: string;
+    branch: string;
+    type: string;
 }
 
 export interface IIncome extends Document {

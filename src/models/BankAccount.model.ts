@@ -8,6 +8,18 @@ const BankAccountSchema = new Schema<IBankAccount, Model<IBankAccount>>({
     accountNumber: {
         type: String,
         required: true
+    },
+    branch: {
+        type: String,
+        required: true
+    },
+    type: {
+        type: String,
+        required: true
+    },
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     }
 })
 

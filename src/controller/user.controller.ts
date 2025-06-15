@@ -95,19 +95,20 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
 
 export const addBankAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {bankName, accountNumber} = req.body
-
-        const body = {bankName, accountNumber}
+        const {bankName, accountNumber, branch, type} = req.body
+        const userId = req._id
+        const body = {bankName, accountNumber, branch, type}
         validateMandatory(body)
 
-        const bankAccount = await BankAccount.create(body)
+        const bankAccount = await BankAccount.create({
+            userId,
+            ...body
+        })
 
         if (!bankAccount._id) {
             throw new ApiError('Facing problem adding the bank account', 400)
         }
 
-        await User.findByIdAndUpdate(req._id, {$push: {'bankAccounts': bankAccount._id}})
-    
         res.status(200).json({
             msg: 'Bank account is added'
         })
@@ -151,3 +152,22 @@ export const updateBankAccount = async (req: Request, res: Response, next: NextF
     }
 }
 
+export const getBankAccounts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req._id
+        const response = await BankAccount.find({userId})
+        res.status(200).json(response)
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const deleteBankAccountById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const accountId = req.params.accountId
+        const response = await BankAccount.deleteOne({_id: accountId})
+        res.status(200).json(response)
+    } catch (err) {
+        next(err)
+    }
+}
