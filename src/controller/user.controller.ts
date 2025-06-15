@@ -118,7 +118,7 @@ export const addBankAccount = async (req: Request, res: Response, next: NextFunc
 
 export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const user = await User.findById(req._id).populate<{bankAccounts: [IBankAccount]}>('bankAccounts')
+        const user = await User.findById(req._id)
         res.status(200).json(user)
     } catch (err) {
         next(err)

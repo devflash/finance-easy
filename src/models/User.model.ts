@@ -27,12 +27,6 @@ const userSchema = new mongoose.Schema<IUser, IUserModel>(
         phoneNumber: {
             type: String
         },
-        bankAccounts: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'BankAccount'
-            }
-        ],
         refreshToken: {
             type: String
         }
