@@ -65,3 +65,14 @@ export interface ISaving extends Document {
     updateAt: Date;
     type: "Saving"
 }
+
+export interface ICard extends Document {
+     _id: string
+     userId: Types.ObjectId
+     cardNumber: string;
+     expirationDate: Date;
+     name: string;
+     type: string;
+     createdAt: Date
+     updateAt: Date
+}

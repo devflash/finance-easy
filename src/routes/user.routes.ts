@@ -8,7 +8,11 @@ import {
     updateProfile,
     updateBankAccount,
     getBankAccounts,
-    deleteBankAccountById
+    deleteBankAccountById,
+    getCards,
+    addCard,
+    deleteCardById,
+    getPaymentMethods
 } from '../controller/user.controller.js'
 import {dashboard} from '../controller/dashboard.controller.js'
 import {auth} from '../middlewares/auth.js'
@@ -21,10 +25,16 @@ router.post('/logout', auth, logout)
 
 router.get('/bank-accounts', auth, getBankAccounts)
 router.post('/bank-account', auth, addBankAccount)
-router.put('/bank-account', auth, updateBankAccount)
 router.delete('/bank-account/:accountId', auth, deleteBankAccountById)
+
+router.get('/cards', auth, getCards)
+router.post('/card', auth, addCard)
+router.delete('/card/:cardId', auth, deleteCardById)
+
 router.get('/profile', auth, getProfile)
-router.put('/update', auth, updateProfile)
+router.put('/profile', auth, updateProfile)
+router.get('/payment-methods', auth, getPaymentMethods)
+
 
 router.get('/dashboard', auth, dashboard)
 

@@ -2,8 +2,11 @@ import {Request, Response, NextFunction} from 'express'
 import {ApiError, ValidationError} from '../ErrorHandling/CustomErrors.js'
 import {User, IUserDoc} from '../models/User.model.js'
 import {BankAccount} from '../models/BankAccount.model.js'
+import {Card} from '../models/Cards.model.js'
 import {validateMandatory} from '../utils/util.js'
-import { IBankAccount } from './../utils/types.js';
+import {IBankAccount} from './../utils/types.js'
+import mongoose, {PipelineStage} from 'mongoose'
+const {ObjectId} = mongoose.Types
 
 const generateToken = (user: IUserDoc) => {
     const accessToken = user.generateAccessToken()
@@ -60,8 +63,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             email
         })
 
-        
-        if(!user){
+        if (!user) {
             throw new ApiError('User not found', 400)
         }
 
@@ -167,6 +169,90 @@ export const deleteBankAccountById = async (req: Request, res: Response, next: N
         const accountId = req.params.accountId
         const response = await BankAccount.deleteOne({_id: accountId})
         res.status(200).json(response)
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const addCard = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {cardNumber, expirationDate, name, type} = req.body
+        const userId = req._id
+        const body = {cardNumber, expirationDate, name, type}
+        validateMandatory(body)
+
+        const card = await Card.create({
+            userId,
+            ...body
+        })
+
+        if (!card._id) {
+            throw new ApiError('Facing problem adding the card', 400)
+        }
+
+        res.status(200).json({
+            msg: 'Card is added'
+        })
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const getCards = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = req._id
+        const response = await Card.find({userId})
+        res.status(200).json(response)
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const deleteCardById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        console.log(req.params)
+        const cardId = req.params.cardId
+        const response = await Card.deleteOne({_id: cardId})
+        res.status(200).json(response)
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const getPaymentMethods = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const userId = new ObjectId(req._id)
+        const pipeline: PipelineStage[] = [
+            {
+                $match: {
+                    userId
+                }
+            },
+            {
+                $addFields: {
+                    methodType: 'bank'
+                }
+            },
+            {
+                $unionWith: {
+                    coll: 'cards',
+                    pipeline: [
+                        {
+                            $match: {
+                                userId
+                            }
+                        },
+                        {
+                            $addFields: {
+                                methodType: 'card'
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+        const paymentMethods = await BankAccount.aggregate(pipeline)
+        res.status(200).json(paymentMethods)
     } catch (err) {
         next(err)
     }
