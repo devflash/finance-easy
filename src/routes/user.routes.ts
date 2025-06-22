@@ -14,7 +14,7 @@ import {
     deleteCardById,
     getPaymentMethods
 } from '../controller/user.controller.js'
-import {dashboard} from '../controller/dashboard.controller.js'
+import {dashboard, dashboardNew} from '../controller/dashboard.controller.js'
 import {auth} from '../middlewares/auth.js'
 
 const router = Router()
@@ -36,6 +36,6 @@ router.put('/profile', auth, updateProfile)
 router.get('/payment-methods', auth, getPaymentMethods)
 
 
-router.get('/dashboard', auth, dashboard)
+router.get('/dashboard', auth, dashboardNew)
 
 export default router
