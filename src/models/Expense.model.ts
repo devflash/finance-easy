@@ -17,6 +17,10 @@ const expenseSchema = new mongoose.Schema<IExpense, IExpenseModel>(
             type: String,
             required: true
         },
+        paymentMethodId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: false
+        },
         amount: {
             type: Number,
             required: true

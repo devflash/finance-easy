@@ -41,6 +41,7 @@ export interface IExpense extends Document {
     category: string,
     moneyPaidTo: string,
     paymentMethod: string,
+    paymentMethodId: Types.ObjectId,
     amount: number,
     date: Date,
     description: string,

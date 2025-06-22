@@ -64,9 +64,9 @@ const amountByCategoryPipeline: PipelineStage[] = [{
 
 export const createExpense = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {category, moneyPaidTo, paymentMethod, amount, date, description} = req.body
+        const {category, moneyPaidTo, paymentMethod,paymentMethodId, amount, date, description} = req.body
 
-        const requiredFields = {category, moneyPaidTo, paymentMethod, amount, date, description}
+        const requiredFields = {category, moneyPaidTo, paymentMethod, paymentMethodId, amount, date, description}
         validateMandatory(requiredFields)
 
         const expense = await Expense.create({
@@ -74,6 +74,7 @@ export const createExpense = async (req: Request, res: Response, next: NextFunct
             amount,
             moneyPaidTo,
             paymentMethod,
+            paymentMethodId,
             date,
             description,
             userId: req._id
