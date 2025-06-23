@@ -327,6 +327,26 @@ const recentTransactionsPipeline: PipelineStage[] = [
     }
 ]
 
+const summaryPipeline: PipelineStage[] = [
+    {
+        $group: {
+            _id: '$type',
+            average: {
+                $avg: '$amount'
+            },
+            maximum: {
+                $max: '$amount'
+            },
+            minimum: {
+                $min: '$amount'
+            },
+            count: {
+                $sum: 1
+            }
+        }
+    }
+]
+
 export const dashboard = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {startDate, endDate} = req.body
@@ -433,7 +453,8 @@ export const dashboardNew = async (req: Request, res: Response, next: NextFuncti
                     'topSpendings': topSpendingsPipeline as any,
                     'expenseByBanks': expenseByBanksPipeline as any,
                     'expenseByCards': expenseByCardsPipeline as any,
-                    'recentTransactions': recentTransactionsPipeline as any
+                    'recentTransactions': recentTransactionsPipeline as any,
+                    'summary': summaryPipeline as any
                 }
             }
         ])
@@ -444,6 +465,7 @@ export const dashboardNew = async (req: Request, res: Response, next: NextFuncti
             expenseByBanks: dashboardData[0].expenseByBanks,
             expenseByCards: dashboardData[0].expenseByCards,
             transactions: dashboardData[0].recentTransactions,
+            summary: dashboardData[0].summary
         })
     } catch (err) {
         next(err)
