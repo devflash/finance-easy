@@ -77,3 +77,22 @@ export interface ICard extends Document {
      createdAt: Date
      updateAt: Date
 }
+
+export interface IBudget extends Document { 
+    _id: string
+    userId: Types.ObjectId
+    startDate: Date;
+    endDate: Date;
+    totalBudget: Number,
+    totalActual: Number
+    budget: BudgetItem[]
+    createdAt: Date
+    updateAt: Date
+}
+
+interface BudgetItem {
+    category: string,
+    actualAmount: number,
+    budgetAmount: number,
+    type: 'NEED' | 'WANT' | 'SAVING'
+}
