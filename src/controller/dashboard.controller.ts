@@ -471,3 +471,136 @@ export const dashboardNew = async (req: Request, res: Response, next: NextFuncti
         next(err)
     }
 }
+
+
+// [
+//   {
+//     $match:
+//       /**
+//        * query: The query in MQL.
+//        */
+//       {
+//         userId: ObjectId(
+//           "66a3c726073457997df9859a"
+//         )
+//       }
+//   },
+//   {
+//     $unionWith:
+//       /**
+//        * coll: The collection name.
+//        * pipeline: The pipeline on the other collection.
+//        */
+//       {
+//         coll: "expenses",
+//         pipeline: [
+//           {
+//             $match: {
+//               userId: ObjectId(
+//                 "66a3c726073457997df9859a"
+//               )
+//             }
+//           }
+//         ]
+//       }
+//   },
+//   {
+//     $unionWith:
+//       /**
+//        * coll: The collection name.
+//        * pipeline: The pipeline on the other collection.
+//        */
+//       {
+//         coll: "savings",
+//         pipeline: [
+//           {
+//             $match: {
+//               userId: ObjectId(
+//                 "66a3c726073457997df9859a"
+//               )
+//             }
+//           }
+//         ]
+//       }
+//   },
+//   {
+//     $match:
+//       /**
+//        * query: The query in MQL.
+//        */
+//       {
+//         $or: [
+//           {
+//             type: "Income"
+//           },
+//           {
+//             type: "Saving"
+//           }
+//         ]
+//       }
+//   },
+//   {
+//     $project:
+//       /**
+//        * specifications: The fields to
+//        *   include or exclude.
+//        */
+//       {
+//         sv: {
+//           $cond: {
+//             if: {
+//               $eq: ["$type", "Saving"]
+//             },
+//             then: "$amount",
+//             else: {
+//               $literal: 0
+//             }
+//           }
+//         },
+//         iv: {
+//           $cond: {
+//             if: {
+//               $eq: ["$type", "Income"]
+//             },
+//             then: "$amount",
+//             else: {
+//               $literal: 0
+//             }
+//           }
+//         }
+//       }
+//   },
+//   {
+//     $group:
+//       /**
+//        * _id: The id of the group.
+//        * fieldN: The first field name.
+//        */
+//       {
+//         _id: null,
+//         totalIv: {
+//           $sum: "$iv"
+//         },
+//         totalSv: {
+//           $sum: "$sv"
+//         }
+//       }
+//   },
+//   {
+//     $project:
+//       /**
+//        * specifications: The fields to
+//        *   include or exclude.
+//        */
+//       {
+//         svToIv: {
+//           $multiply: [
+//             {
+//               $divide: ["$totalSv", "$totalIv"]
+//             },
+//             100
+//           ]
+//         }
+//       }
+//   }
+// ]

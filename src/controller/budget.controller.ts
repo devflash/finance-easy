@@ -26,3 +26,61 @@ export const createBudget = async (req: Request, res: Response, next: NextFuncti
         next(error)
     }
 }
+
+export const getBudgetById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {budgetId} = req.params
+
+        const budget = await Budget.findById(budgetId).select('-userId')
+        res.status(200).json(budget)
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const searchBudgets = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        // Todo: Add query parameters to search budget: status
+        const budgets = await Budget.find({userId: req._id})
+        res.status(200).send(budgets)
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const updateBudget = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {budgetId} = req.params
+        const {startDate, endDate, totalBudget, totalActual, budget} = req.body
+
+        const requiredFields = {startDate, endDate, totalBudget}
+        validateMandatory(requiredFields)
+        const budgetData = await Budget.findOneAndUpdate(
+            {_id: budgetId},
+            {budgetId, startDate, endDate, totalBudget,totalActual, budget}
+        )
+        console.log(budgetData)
+        if(!budgetData){
+            throw new ApiError("Budget not found", 400)
+        }
+
+        const updatedBudget = await Budget.findById(budgetId).select('-userId')
+        res.status(200).json(updatedBudget)
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const deleteBudget = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {budgetId} = req.params
+
+        await Budget.deleteOne({_id: budgetId})
+
+        res.status(200).json({
+            msg: `Budget ${budgetId} is deleted from the records successfuly`
+        })
+    } catch (error) {
+        next(error)
+    }
+}

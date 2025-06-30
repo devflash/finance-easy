@@ -83,8 +83,8 @@ export interface IBudget extends Document {
     userId: Types.ObjectId
     startDate: Date;
     endDate: Date;
-    totalBudget: Number,
-    totalActual: Number
+    totalBudget: number,
+    totalActual: number
     budget: BudgetItem[]
     createdAt: Date
     updateAt: Date
