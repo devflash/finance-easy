@@ -62,15 +62,15 @@ const {ObjectId} = mongoose.Types
 
 export const createSaving = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {amount, investmentType, date, description} = req.body
+        const {amount, category, date, description} = req.body
 
-        const requiredFields = {amount, date, investmentType}
+        const requiredFields = {amount, date, category}
         validateMandatory(requiredFields)
 
         const saving = await Saving.create({
             amount,
             date,
-            investmentType,
+            category,
             description,
             userId: req._id
         })
@@ -111,13 +111,13 @@ export const getSavings = async (req: Request, res: Response, next: NextFunction
 export const updateSaving = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {savingId} = req.params
-        const {amount, date, investmentType, description} = req.body
+        const {amount, date, category, description} = req.body
 
-        const requiredFields = {amount, investmentType, date}
+        const requiredFields = {amount, category, date}
         validateMandatory(requiredFields)
         const saving = await Saving.findOneAndUpdate(
             {_id: savingId},
-            {savingId, amount, date, investmentType, description}
+            {savingId, amount, date, category, description}
         )
 
         if(!saving){
@@ -150,12 +150,12 @@ export const deleteSaving = async (req: Request, res: Response, next: NextFuncti
 
 export const searchSavings = async (req: Request, res: Response, next: NextFunction) => {
     try {
-       const {investmentType, startDate, endDate, page=1, limit=5} = req.query
+       const {category, startDate, endDate, page=1, limit=5} = req.query
        const userId = new ObjectId(req._id)
       
        const searchQuery = {
             userId,
-            ...(investmentType && {investmentType: {$in: [investmentType]}}),
+            ...(category && {category: {$in: [category]}}),
             ...(startDate && endDate && {incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
        }
        const offset = (Number(page) - 1) * Number(limit)

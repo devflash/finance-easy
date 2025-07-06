@@ -60,7 +60,7 @@ export interface ISaving extends Document {
     userId: Types.ObjectId,
     date: Date,
     amount: number,
-    investmentType: string,
+    category: string,
     description: string
     createdAt: Date;
     updateAt: Date;
