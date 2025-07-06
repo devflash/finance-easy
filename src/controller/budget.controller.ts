@@ -59,7 +59,7 @@ export const updateBudget = async (req: Request, res: Response, next: NextFuncti
             {_id: budgetId},
             {budgetId, startDate, endDate, totalBudget,totalActual, budget}
         )
-        console.log(budgetData)
+    
         if(!budgetData){
             throw new ApiError("Budget not found", 400)
         }
