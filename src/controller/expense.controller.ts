@@ -187,7 +187,7 @@ export const updateExpense = async (req: Request, res: Response, next: NextFunct
         if (
             updatedExpense &&
             budget &&
-            (updatedExpense.date !== originalExpense.date ||
+            (updatedExpense.date.toISOString() !== originalExpense.date.toISOString() ||
                 updatedExpense.category !== originalExpense.category ||
                 updatedExpense.amount !== originalExpense.amount)
         ) {

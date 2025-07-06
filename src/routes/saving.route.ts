@@ -7,6 +7,6 @@ router.post('/create', auth, createSaving)
 router.get('/all', auth, getSavings)
 router.get('/search', auth, searchSavings)
 router.get('/:savingId', auth, getSavingById)
-router.put('/:savingId', updateSaving)
-router.delete('/:savingId', deleteSaving)
+router.put('/:savingId', auth, updateSaving)
+router.delete('/:savingId', auth, deleteSaving)
 export default router

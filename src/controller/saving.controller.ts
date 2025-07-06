@@ -1,8 +1,10 @@
 import {Request, Response, NextFunction} from 'express'
 import {Saving} from '../models/Saving.model.js'
+import {Budget} from '../models/Budget.model.js'
 import {validateMandatory} from '../utils/util.js'
-import { ApiError } from '../ErrorHandling/CustomErrors.js'
+import {ApiError} from '../ErrorHandling/CustomErrors.js'
 import mongoose, {PipelineStage} from 'mongoose'
+import { ISaving } from '../utils/types.js'
 const {ObjectId} = mongoose.Types
 
 // const amountByCategoryPipeline: PipelineStage[] = [{
@@ -23,7 +25,7 @@ const {ObjectId} = mongoose.Types
 //     const amountByMonth = [
 //         {
 //             $match: {
-//                 incomeDate: 
+//                 incomeDate:
 //                         {
 //                                 $gte: new Date("01/01/2024"),
 //                                 $lt: new Date("01/03/2025"),
@@ -59,6 +61,38 @@ const {ObjectId} = mongoose.Types
 //             }
 //         }
 //     ]
+const findAndUpdateBudget = async (userId: string, updatedSaving: ISaving) => {
+    const budgetForUpdatedSaving = await Budget.findOne({
+        userId: userId,
+        startDate: {$lt: updatedSaving.date},
+        endDate: {$gt: updatedSaving.date}
+    })
+    if (budgetForUpdatedSaving) {
+        const isCategoryExist =
+            budgetForUpdatedSaving.budget.findIndex(item => item.category === updatedSaving.category) > -1
+
+        if (!isCategoryExist) {
+            await Budget.findOneAndUpdate(
+                {_id: budgetForUpdatedSaving._id},
+                {
+                    $push: {
+                        budget: {
+                            category: updatedSaving.category,
+                            actualAmount: updatedSaving.amount,
+                            budgetAmount: 0
+                        }
+                    }
+                }
+            )
+        } else {
+            await Budget.findOneAndUpdate(
+                {_id: budgetForUpdatedSaving._id},
+                {$inc: {'budget.$[elem].actualAmount': updatedSaving.amount}},
+                {arrayFilters: [{'elem.category': updatedSaving.category}]}
+            )
+        }
+    }
+}
 
 export const createSaving = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -76,6 +110,14 @@ export const createSaving = async (req: Request, res: Response, next: NextFuncti
         })
 
         const createdSaving = await Saving.findById(saving._id).select('-userId')
+
+        if (createdSaving) {
+            await Budget.findOneAndUpdate(
+                {userId: req._id, startDate: {$lt: createdSaving.date}, endDate: {$gt: createdSaving.date}},
+                {$inc: {'budget.$[elem].actualAmount': amount}},
+                {arrayFilters: [{'elem.category': category}]}
+            )
+        }
         res.status(200).json(createdSaving)
     } catch (error) {
         next(error)
@@ -115,16 +157,64 @@ export const updateSaving = async (req: Request, res: Response, next: NextFuncti
 
         const requiredFields = {amount, category, date}
         validateMandatory(requiredFields)
-        const saving = await Saving.findOneAndUpdate(
-            {_id: savingId},
-            {savingId, amount, date, category, description}
-        )
+        const originalSaving = await Saving.findOneAndUpdate({_id: savingId}, {savingId, amount, date, category, description})
 
-        if(!saving){
-            throw new ApiError("Saving not found", 400)
+        if (!originalSaving) {
+            throw new ApiError('Saving not found', 400)
         }
 
-        const updatedSaving = await Saving.findById(saving._id).select('-userId')
+        const updatedSaving = await Saving.findById(originalSaving._id).select('-userId')
+            const budget = await Budget.findOne({
+            userId: req._id,
+            startDate: {$lt: originalSaving.date},
+            endDate: {$gt: originalSaving.date}
+        })
+        console.log(originalSaving)
+        console.log(updatedSaving)
+        console.log(budget)
+          if (updatedSaving && !budget) {
+            await findAndUpdateBudget(req._id!, updatedSaving)
+        }
+
+         if (
+                    updatedSaving &&
+                    budget &&
+                    (updatedSaving.date.toISOString() !== originalSaving.date.toISOString() ||
+                        updatedSaving.category !== originalSaving.category ||
+                        updatedSaving.amount !== originalSaving.amount)
+                ) {
+                    if (updatedSaving.date >= budget.startDate && updatedSaving.date < budget.endDate) {
+                        console.log("case 1")
+                        const diffAmount = updatedSaving.amount - originalSaving.amount
+                        console.log(diffAmount)
+                        if (updatedSaving.category === originalSaving.category) {
+                            await Budget.updateOne(
+                                {_id: budget._id},
+                                {$inc: {'budget.$[elem].actualAmount': diffAmount}},
+                                {arrayFilters: [{'elem.category': category}]}
+                            )
+                        } else {
+                            await Budget.updateOne(
+                                {_id: budget._id},
+                                {$inc: {'budget.$[elem].actualAmount': -originalSaving.amount}},
+                                {arrayFilters: [{'elem.category': originalSaving.category}]}
+                            )
+                            await Budget.updateOne(
+                                {_id: budget._id},
+                                {$inc: {'budget.$[elem].actualAmount': updatedSaving.amount}},
+                                {arrayFilters: [{'elem.category': category}]}
+                            )
+                        }
+                    } else {
+                        // expense date updated and falls outside the budget it was originally in
+                        await Budget.updateOne(
+                            {_id: budget._id},
+                            {$inc: {'budget.$[elem].actualAmount': -originalSaving.amount}},
+                            {arrayFilters: [{'elem.category': originalSaving.category}]}
+                        )
+                        await findAndUpdateBudget(req._id!, updatedSaving)
+                    }
+                }
         res.status(200).json(updatedSaving)
     } catch (error) {
         next(error)
@@ -138,7 +228,28 @@ export const deleteSaving = async (req: Request, res: Response, next: NextFuncti
         const requiredFields = {savingId}
         validateMandatory(requiredFields)
 
-        await Saving.deleteOne({_id: savingId})
+        const saving = await Saving.findById(savingId)
+        if (!saving) {
+            throw new ApiError('Saving not found', 400)
+        }
+
+        const result = await Saving.deleteOne({_id: savingId})
+        if (!result.deletedCount) {
+            throw new ApiError('System faced issue deleting the saving', 400)
+        }
+        const budget = await Budget.findOne({
+            userId: req._id,
+            startDate: {$lt: saving.date},
+            endDate: {$gt: saving.date}
+        })
+
+        if (budget) {
+            await Budget.findOneAndUpdate(
+                {_id: budget._id},
+                {$inc: {'budget.$[elem].actualAmount': -saving.amount}},
+                {arrayFilters: [{'elem.category': saving.category}]}
+            )
+        }
 
         res.status(200).json({
             msg: `Saving ${savingId} is deleted from the records successfuly`
@@ -150,30 +261,25 @@ export const deleteSaving = async (req: Request, res: Response, next: NextFuncti
 
 export const searchSavings = async (req: Request, res: Response, next: NextFunction) => {
     try {
-       const {category, startDate, endDate, page=1, limit=5} = req.query
-       const userId = new ObjectId(req._id)
-      
-       const searchQuery = {
+        const {category, startDate, endDate, page = 1, limit = 5} = req.query
+        const userId = new ObjectId(req._id)
+
+        const searchQuery = {
             userId,
             ...(category && {category: {$in: [category]}}),
             ...(startDate && endDate && {incomeDate: {$and: [{$gte: startDate}, {$lte: endDate}]}})
-       }
-       const offset = (Number(page) - 1) * Number(limit)
-   
-       const pipeline = [
-        { $match: searchQuery },
-        {
-          $facet: {
-            paginatedResults: [
-              { $skip: offset },
-              { $limit: Number(limit) }
-            ],
-            totalCount: [
-              { $count: "count" }
-            ]
-          }
         }
-      ];
+        const offset = (Number(page) - 1) * Number(limit)
+
+        const pipeline = [
+            {$match: searchQuery},
+            {
+                $facet: {
+                    paginatedResults: [{$skip: offset}, {$limit: Number(limit)}],
+                    totalCount: [{$count: 'count'}]
+                }
+            }
+        ]
         const response = await Saving.aggregate(pipeline)
         res.status(200).send({
             savings: response[0].paginatedResults,
@@ -197,7 +303,7 @@ export const searchSavings = async (req: Request, res: Response, next: NextFunct
 //                     'incomeByMonths': amountByMonth as any,
 //                 }
 //             }])
-        
+
 //         res.status(200).json({
 //             incomeByCategory: incomeData[0].incomeByCategory,
 //             incomeByMonths: incomeData[0].incomeByMonths,
